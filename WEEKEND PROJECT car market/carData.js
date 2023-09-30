@@ -620,4 +620,247 @@ const carMarket = {
         sumOfAllTransactions: 0,
         numberOfTransactions: 0,
     },
+    
+    /// Agency Operations: ///
+    
+    //1-Search for a car agency by its name or ID.
+    carAgencySearch(nameOrID) {
+        const carAgency = this.sellers.find((agency) => //Use the 'find' method to search for an agency
+        nameOrID === agency.agencyName || nameOrID === agency.agencyId);
+        if (carAgency) { //Check if an agency was found
+            return carAgency; // Return the agency object if found
+        } else { // Return an error message if no agency is found
+            return "Sorry, Car agency is not found by this name/id: " + nameOrID;
+        }
+    },
+    
+    //2-Retrieve all agencies' names.
+    AllAgenciesNames () {
+    const agenciesNames = this.sellers.map((agency) => agency.agencyName); //uses the map method to create an array of agency names by iterating through the agencies and extracting their agencyName property.
+    return agenciesNames; // returns an array of agency names.
+    },
+   
+    //3-Add a new car to an agency's inventory.
+ AddCarToAgency (agencyName, car) {
+    const agency = this.carAgencySearch(agencyName); //First, search for the agency using the carAgencySearch function.
+    if (agency) { //If the agency exists, it checks if a car with the same brand and model.name already exists in the agency's inventory.
+        const foundCar = agency.cars.find ((c) =>
+            c.brand === car.brand && c.models.some((model) => car.model.name));        
+        if (foundCar) { //If a matching car is found, the new model is added to the existing car's models array.
+            foundCar.models.push({
+                name: car.model.name,
+                year: car.model.year,
+            carNumber: car.model.carNumber,
+            ownerId: agency.agencyId, 
+            });
+        }else { // If no matching car is found, a new car entry is created in the agency's inventory.
+            agency.cars.push({
+                brand: car.brand,
+                models: [
+                    {
+                        name: car.model.name,
+                        year: car.model.year,
+                    carNumber: car.model.carNumber,
+                    ownerId: agency.agencyId, 
+                    },
+                ],
+            });
+        }
+        return "The Car is Added successfully.";
+    }
+    return "Sorry, Can't Add a new car.";
+},
+
+//4- Removing car from agency:
+removeCarFromAgency (agencyName, carNumber) {
+    const agency = this.carAgencySearch(agencyName); // searching for the agency using the carAgencySearch function.
+    if (agency) { //If the agency exists, it finds the car in the agency's inventory based on the carNumber.
+        const carIndex = agency.cars.findIndex((c) =>
+        c.models.some((model) => model.carNumber === carNumber));
+        if (carIndex !== -1) { //If the car is found, it is removed from the agency's inventory.
+            const carModelIndex = agency.cars[carIndex].models.findIndex((model) => 
+            model.carNumber === carNumber); 
+            agency.cars[carIndex].models.splice(carModelIndex, 1);
+            if (agency,cars[carIndex].models.length === 0) { //If the car was the last one of its kind (no more models of that car in the agency), the entire car entry is removed from the agency.
+                agency.cars.splice(carIndex, 1);
+            }
+        return "The car removed successfully";
+        }
+    }
+    return "There is no car to remove.";
+},
+
+//5- update the agency credit:
+updateAgencyCredit (agencyName, amount) {
+    const agency = this.carAgencySearch(agencyName); //searching for the agency using the carAgencySearch
+    if (agency) { // If the agency exist
+        agency.credit += amount; //updates the agency's cash balance by adding or subtracting the specified amount.
+        return "Cash balance is updated.";
+    }
+    return "Cash balanced isn't update.";
+},
+
+// 6- update car price:
+updateCarPrice (agencyName, carNumber, newPrice) {
+    const agency = this.carAgencySearch(agencyName);//searching for the agency using the carAgencySearch
+    if (agency) { // If the agency exist
+        for (const car of agency.cars) { //iterating through the agency's inventory to find the car with the matching carNumber.
+            const model = car.models.find((model) => model.carNumber === carNumber);
+            if (model) { // If the car is found,
+                model.price = newPrice; // its price is updated to the new price.
+                return "The car's price is updated successfully.";
+            }
+        }
+    }
+    return "The car price is'nt update";
+},
+
+// 7- get total agency revenue:
+getTotalAgencyRevenue (agencyName) {
+const agency = this.carAgencySearch(agencyName);
+if (agency) {
+    let totalRevenue = 0;
+    for (const car of agency.cars) { //iterating through the agency's inventory
+        for (const model of car.models) { // and also iterating through the cars models.
+            totalRevenue += model.price; // summing up the prices of all cars.
+        }
+    }
+    return totalRevenue; //returns the total revenue as a number.
+}
+return 0; // if the agency didn't found return 0.
+},
+
+//8- transfer car between agencies:
+transferCarBetweenAgencies (fromAgencyName, toAgencyName, carNumber) {
+const fromAgency = this.carAgencySearch(fromAgencyName); //searching for both the source
+const toAgency = this.carAgencySearch(toAgencyName); //and destination agencies using the carAgencySearch function.
+
+if (fromAgency && toAgency) { //If both agencies exist
+    for (const car of fromAgency.car) { //iterating through the source agency's inventory
+        const modelIndex = car.models.findIndex((model) => model.carNumber === carNumber); //find the car in the source agency's inventory based on the carNumber.
+        if (modelIndex !== -1) {
+            const carModel = car.models.splice(modelIndex, 1)[0];
+            toAgency.cars.push({
+                brand: car.brand,
+                models: [carModel],
+            });
+            return true;
+        }
+    }
+}
+return false;
+},
+
+/// Customer Operations:
+
+//1- search customer by name or id:
+searchCustomerByNameOrId (nameOrID) {
+    const customer = this.customers.find(( customer) =>
+    customer.name === nameOrID || customer.id === nameOrID);
+    if (customer) {
+        return true;
+    } else {
+        return "Sorry, cant found customer with this name/id !"
+    }
+},
+
+//2- get all customers names
+getAllCustomerNames () {
+    const allCustomerNames = this.customers.map((customer) => customer.name);
+    return allCustomerNames;
+},
+
+//3- update customer cash:
+updateCustomerCash (customerId, amount) {
+const customer = this.customers.find((c) => c.id === customerId);
+if (customer) {
+    customer.cash +=amount;
+    return true;
+}
+return false;
+},
+
+// 4- get customer total car value:
+getCustomerTotalCarValue (customerId) {
+    const customer = this.customers.find((c) => c.id === customerId);
+    if (customer) {
+        let totalValue = 0;
+        for (const car of customer.cars) {
+            totalValue =+ car.price;
+        } 
+        return totalValue;
+    }
+    return 0;
+},
+
+/// Car Operations ///
+
+//1- get all available cars:
+getAllAvailableCars () {
+    const allCars = [];
+for (const agency of this.sellers) {
+    for (const car of agency.cars) {
+        allCars.push(...car.models);
+    }
+}
+return allCars;
+},
+
+//2- search cars:
+searchCars (criteria) {
+    const { year, price, brand } = criteria;
+    const filteredCars = this.getAllAvailableCars().filter((car) =>{
+        return (
+            (!year || car.year === year) &&
+            (!price || car.brand <= price) &&
+            (!brand || car.brand === brand)
+        );
+    });
+    return filteredCars;
+},
+//3- get most expensive car
+getMostExpensiveCar () {
+   const allCars = this.getAllAvailableCars();
+   if (allCars.length === 0) return null;
+   const mostExpensiveCar = allCars.reduce((maxCar, car) => (car.price > maxCar.price ? car : maxCar), allCars[0]);
+   return mostExpensiveCar;
+},
+
+//4- get most cheap car
+getCheapestCar () {
+   const allCars = this.getAllAvailableCars();
+   if (allCars.length === 0) return null;
+   const cheapestCar = allCars.reduce((minCar, car) => (car.price < minCar.price ? car : minCar), allCars[0]);
+   return cheapestCar;
+},
+
+/// Car Purchase Operations ///
+
+sellCar (agencyName, customerId, carNumber) {
+    const agency = this.carAgencySearch(agencyName);
+    const customer = this.searchCustomerByNameOrId(customerId);
+
+    if (agency && customer) {
+        const car = this.getAllAvailableCars().find((c) => c.carNumber === carNumber);
+        if (car) {
+            if (customer.cash >= car.price){
+                customer.cash -= car.price;
+                agency.cash += car.price;
+                car.ownerId = customer.id;
+                customer.cars.push(car);
+
+                this.taxesAuthority.totalTaxesPaid += car.price * 0.1; // Assuming a 10% tax
+                this.taxesAuthority.sumOfAllTransactions += car.price;
+                this.taxesAuthority;
+            }
+        }
+    }
+}
+
+
+
+
 };
+
+
+ 
